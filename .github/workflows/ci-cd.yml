@@ -1,5 +1,6 @@
 name: Iris MLOps CI/CD
 
+# Trigger the workflow on pushes and pull requests to main
 on:
     push:
         branches: [main]
@@ -7,42 +8,63 @@ on:
         branches: [main]
 
 jobs:
+    # Job 1: Run automated Python tests
     test:
+        # Download repository source code
         name: Run Python Tests
         runs-on: ubuntu-latest
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
 
+            # Configure Python 3.12
             - name: Set up Python
               uses: actions/setup-python@v5
               with:
                 python-version: "3.12"
-
+            # Install uv package manager
             - name: Install uv
               uses: astral-sh/setup-uv@v6
               with:
                 version: "0.12.12"
-                enable-cache: true
 
             - name: Install dependencies
               run: uv sync --locked
-            
+
+            # Run automated tests
             - name: Ryn pytest
               run: uv run pytest -v
+
+    # Job 2: Build and publish the Docker image
     build:
         name: Build Docker Image
         runs-on: ubuntu-latest
+
+        # Run only after successful tests
         needs: test
 
+        # Grant permissions to publish packages
+        permissions:
+            contents: read
+            packages: write
+
         steps:
+            # Download repository source code
           - name: Checkout repository
             uses: actions/checkout@v4
 
-          - name: Build Docker image
-            run: docker build -t iris-api:1.0 .
+            # Authenticate to GitHub Container Registry
+          - name: Log in to GHRC
+            uses: docker/login-action@v3
+            with:
+                registry: ghcr.io
+                username: $({ github.actor })
+                password: $({ secrets.GITHUB_TOKEN })
 
-
-
-
-
+            # Build the Docker image and publish on push
+          - name: Build and push Docker image
+            uses: docker/build-push-action@v6
+            with:
+                context:
+                push: $({ github.event_name == "push"})
+                tags: ghcr.io/seraphinLontsi/-mlops-iris:1.0
