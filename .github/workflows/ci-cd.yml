@@ -68,4 +68,4 @@ jobs:
             with:
                 context:
                 push: ${{ github.event_name == 'push' }}
-                tags: ghcr.io/seraphinlontsi/-mlops-iris:1.0
+                tags: ghcr.io/seraphinlontsi/mlops-iris:1.0
