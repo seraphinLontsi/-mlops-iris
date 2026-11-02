@@ -30,6 +30,17 @@ jobs:
             
             - name: Ryn pytest
               run: uv run pytest -v
+    build:
+        name: Build Docker Image
+        runs-on: ubuntu-latest
+        needs: test
+
+        steps:
+          - name: Checkout repository
+            uses: actions/checkout@v4
+
+          - name: Build Docker image
+            run: docker build -t iris-api:1.0 .
 
 
 
